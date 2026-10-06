@@ -10,8 +10,8 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
 - Doména webu: {{DOMAIN}}                     (např. mujweb.cz, případně i www varianta)
 - Umami URL: https://analytics.pavelprokes.cz   (tracking doména, HTTPS; bez lomítka na konci)
 - Website ID: {{WEBSITE_ID}}                  (UUID z Umami → Settings → Websites)
-- Název skriptu: {{SCRIPT_NAME}}              (např. stats.js; výchozí je script.js)
-- Collect endpoint: {{COLLECT_ENDPOINT}}      (např. /api/e; výchozí je /api/send)
+- Název skriptu: stats.js                     (pokud vrací 404, použij script.js)
+- Collect endpoint: /api/e                    (pokud vrací 404, použij /api/send)
 
 ## Postup
 1. Nejdřív zjisti framework a verzi (package.json, struktura app/ vs pages/). Pokud
@@ -35,7 +35,7 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
 
 ### A) Pageviews (client)
 - Nastav env: NEXT_PUBLIC_UMAMI_URL, NEXT_PUBLIC_UMAMI_WEBSITE_ID,
-  NEXT_PUBLIC_UMAMI_SCRIPT (název skriptu) a doplň je do .env.example.
+  NEXT_PUBLIC_UMAMI_SCRIPT (výchozí stats.js), UMAMI_COLLECT_ENDPOINT (výchozí /api/e) a doplň je do .env.example.
 - V root layoutu (Next.js App Router: app/layout.tsx; Pages Router: _app.tsx)
   přidej `next/script` se strategy="afterInteractive":
   `src={`${URL}/${SCRIPT}`}`, `data-website-id`, `data-domains="{{DOMAIN}}"`.
@@ -48,7 +48,7 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
 ### B) Server events (SSE) – bez blokování odpovědi
 Vytvoř `lib/umami.ts` (server-only) s funkcí
 `trackServerEvent({ name, data, request })`:
-- POST na `${UMAMI_URL}${COLLECT_ENDPOINT}` s hlavičkou `Content-Type: application/json`
+- POST na `${UMAMI_URL}${UMAMI_COLLECT_ENDPOINT}` s hlavičkou `Content-Type: application/json`
   a tělem:
   { "type": "event",
     "payload": {
@@ -79,8 +79,11 @@ Vytvoř `lib/umami.ts` (server-only) s funkcí
 
 ### C) Ověření
 - Spusť lint/typecheck/build projektu.
+- Ověř dostupnost: `curl -sI https://analytics.pavelprokes.cz/stats.js` musí vrátit 200.
+  Pokud 404, přepni skript na `script.js` a endpoint na `/api/send` (výchozí názvy
+  Umami) a napiš mi, že alternativní názvy nejsou ve Vercelu nastavené.
 - Dej mi curl příkaz pro ruční test:
-  curl -i -X POST "https://analytics.pavelprokes.cz{{COLLECT_ENDPOINT}}" -H "Content-Type: application/json" \
+  curl -i -X POST "https://analytics.pavelprokes.cz/api/e" -H "Content-Type: application/json" \
     -d '{"type":"event","payload":{"website":"{{WEBSITE_ID}}","hostname":"{{DOMAIN}}","url":"/test","name":"smoke-test","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36","ip":"203.0.113.10"}}'
   (očekávaná odpověď je 200 s JSON; `{"beep":"boop"}` znamená, že UA vyhodnotil
   bot filtr jako bota).
