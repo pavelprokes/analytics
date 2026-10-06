@@ -17,8 +17,21 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
 1. Nejdřív zjisti framework a verzi (package.json, struktura app/ vs pages/). Pokud
    to není Next.js, přizpůsob řešení (Vite/Astro/čisté HTML = jen client script,
    server část podle runtime). Neměň nic nesouvisejícího.
-2. Ověř, že v projektu ještě nějaký tracking není (grep: umami, gtag, plausible),
-   ať nevznikne duplicita.
+2. Ověř, jaký tracking v projektu už je (grep: umami, gtag, googletagmanager,
+   google-analytics, fbq/facebook pixel, hotjar, clarity, linkedin insight, tiktok
+   pixel, ads/remarketing tagy, vložená videa a widgety třetích stran), ať nevznikne
+   duplicita.
+   - Umami samo (cookieless, bez osobních údajů) cookie banner nevyžaduje; načítej
+     ho vždy, nezávisle na souhlasu.
+   - Pokud najdeš GA, reklamní nebo jiné trackery, které ukládají cookies nebo
+     sdílejí data s třetími stranami, musí na webu být cookie lišta / consent.
+     Zjisti, jestli už existuje (grep: cookie banner, consent, cookiebot, onetrust,
+     klaro, osano, vlastní komponenta).
+     - Existuje → v pořádku, nech ji být a nic neměň.
+     - Neexistuje → NEDĚLEJ ji a nezastavuj kvůli tomu práci. Pokračuj s Umami
+       a na konci reportu uveď varování: „nalezeny trackery X, Y bez cookie
+       souhlasu, je potřeba doplnit consent".
+   - Pokud trackery nenajdeš, nic neřeš a banner nenavrhuj.
 
 ### A) Pageviews (client)
 - Nastav env: NEXT_PUBLIC_UMAMI_URL, NEXT_PUBLIC_UMAMI_WEBSITE_ID,
@@ -72,6 +85,7 @@ Vytvoř `lib/umami.ts` (server-only) s funkcí
   (očekávaná odpověď je 200 s JSON; `{"beep":"boop"}` znamená, že UA vyhodnotil
   bot filtr jako bota).
 - Napiš, co zkontrolovat v Umami (Realtime / Events) po nasazení.
+- V reportu uveď i nález z kroku 2 (nalezené trackery a stav cookie lišty).
 
 ## Pravidla
 - Žádná tajemství v kódu; Umami URL a ID jen přes env.
