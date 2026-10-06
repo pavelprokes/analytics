@@ -224,6 +224,12 @@ export default withNextIntl({
   },
   basePath,
   output: isVercel ? undefined : 'standalone',
+  // The GeoLite database is opened by a runtime path, so the file tracer can't see it.
+  outputFileTracingIncludes: {
+    '/api/send': ['./geo/**'],
+    '/api/batch': ['./geo/**'],
+    '/api/record': ['./geo/**'],
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

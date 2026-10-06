@@ -96,6 +96,8 @@ Vytvoř `lib/umami.ts` (server-only) s funkcí
 ## Poznámka k serverovým událostem na Vercelu
 
 Když v payloadu pošleš `ip`, Umami přeskočí geo hlavičky Vercelu a hledá zemi
-v GeoLite databázi. Na Vercelu se ta při buildu nestahuje (`BUILD_GEO` je vypnuté),
-takže lookup může selhat. Před ostrým použitím SSE to ověř, případně
-nastav `BUILD_GEO=1` + `MAXMIND_LICENSE_KEY` a zajisti, že se složka `geo` zabalí do funkcí.
+v GeoLite databázi (`geo/GeoLite2-City.mmdb`). Databáze se do repa nedává (licence
+MaxMind to zakazuje), stahuje se při buildu: ve Vercelu nastav `BUILD_GEO=1`
+a `MAXMIND_LICENSE_KEY` (zdarma, účet na maxmind.com). `next.config.ts` ji přibalí
+do funkcí `/api/send`, `/api/batch` a `/api/record`. Bez databáze už lookup
+nespadne, jen se země u server eventů neuloží.

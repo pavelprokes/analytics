@@ -110,27 +110,34 @@ export async function getLocation(ip: string = '', headers: Headers, skipHeaders
   }
 
   // Database lookup
-  if (!globalThis[MAXMIND]) {
-    const dir = path.join(process.cwd(), 'geo');
+  try {
+    if (!globalThis[MAXMIND]) {
+      const dir = path.join(process.cwd(), 'geo');
 
-    globalThis[MAXMIND] = await maxmind.open(
-      process.env.GEOLITE_DB_PATH || path.resolve(dir, 'GeoLite2-City.mmdb'),
-    );
+      globalThis[MAXMIND] = await maxmind.open(
+        process.env.GEOLITE_DB_PATH || path.resolve(dir, 'GeoLite2-City.mmdb'),
+      );
+    }
+
+    const result = globalThis[MAXMIND]?.get(cleanIp);
+
+    if (result) {
+      const country = result.country?.iso_code ?? result?.registered_country?.iso_code;
+      const region = result.subdivisions?.[0]?.iso_code;
+      const city = result.city?.names?.en;
+
+      return {
+        country,
+        region: getRegionCode(country, region),
+        city,
+      };
+    }
+  } catch (e) {
+    // A missing or unreadable database must not break event collection.
+    console.error('Geo lookup failed:', (e as Error).message);
   }
 
-  const result = globalThis[MAXMIND]?.get(cleanIp);
-
-  if (result) {
-    const country = result.country?.iso_code ?? result?.registered_country?.iso_code;
-    const region = result.subdivisions?.[0]?.iso_code;
-    const city = result.city?.names?.en;
-
-    return {
-      country,
-      region: getRegionCode(country, region),
-      city,
-    };
-  }
+  return null;
 }
 
 export async function getClientInfo(request: Request, payload: Record<string, any>) {
