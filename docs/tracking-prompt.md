@@ -8,7 +8,7 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
 
 ## Vstupy
 - Doména webu: {{DOMAIN}}                     (např. mujweb.cz, případně i www varianta)
-- Umami URL: {{UMAMI_URL}}                    (např. https://stats.tvadomena.cz, bez lomítka na konci)
+- Umami URL: https://analytics.pavelprokes.cz   (tracking doména, HTTPS; bez lomítka na konci)
 - Website ID: {{WEBSITE_ID}}                  (UUID z Umami → Settings → Websites)
 - Název skriptu: {{SCRIPT_NAME}}              (např. stats.js; výchozí je script.js)
 - Collect endpoint: {{COLLECT_ENDPOINT}}      (např. /api/e; výchozí je /api/send)
@@ -43,7 +43,7 @@ Přidej do tohoto projektu analytics tracking do mé self-hosted Umami instance.
   preview neznečišťují.
 - Navigace v Next.js (History API) se trackuje automaticky, žádné ruční
   `umami.track` na změnu route nepřidávej.
-- Pokud má projekt CSP, povol {{UMAMI_URL}} v script-src a connect-src.
+- Pokud má projekt CSP, povol https://analytics.pavelprokes.cz v script-src a connect-src.
 
 ### B) Server events (SSE) – bez blokování odpovědi
 Vytvoř `lib/umami.ts` (server-only) s funkcí
@@ -80,7 +80,7 @@ Vytvoř `lib/umami.ts` (server-only) s funkcí
 ### C) Ověření
 - Spusť lint/typecheck/build projektu.
 - Dej mi curl příkaz pro ruční test:
-  curl -i -X POST "{{UMAMI_URL}}{{COLLECT_ENDPOINT}}" -H "Content-Type: application/json" \
+  curl -i -X POST "https://analytics.pavelprokes.cz{{COLLECT_ENDPOINT}}" -H "Content-Type: application/json" \
     -d '{"type":"event","payload":{"website":"{{WEBSITE_ID}}","hostname":"{{DOMAIN}}","url":"/test","name":"smoke-test","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36","ip":"203.0.113.10"}}'
   (očekávaná odpověď je 200 s JSON; `{"beep":"boop"}` znamená, že UA vyhodnotil
   bot filtr jako bota).
