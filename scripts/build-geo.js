@@ -42,11 +42,35 @@ if (!fs.existsSync(dest)) {
 const isDirectMmdb = url.endsWith('.mmdb');
 
 // Download handler for compressed tar.gz files
-const downloadCompressed = url =>
-  new Promise(resolve => {
-    https.get(url, res => {
-      resolve(res.pipe(zlib.createGunzip({})).pipe(list()));
-    });
+// Follows redirects (MaxMind answers with a 302 to the actual file) and fails on non-200 responses.
+const downloadCompressed = (url, redirects = 0) =>
+  new Promise((resolve, reject) => {
+    https
+      .get(url, res => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+          res.resume();
+          if (redirects >= 5) {
+            reject(new Error('Too many redirects while downloading geo database.'));
+            return;
+          }
+          resolve(downloadCompressed(new URL(res.headers.location, url).toString(), redirects + 1));
+          return;
+        }
+
+        if (res.statusCode !== 200) {
+          res.resume();
+          reject(new Error(`Geo database download failed with HTTP ${res.statusCode}.`));
+          return;
+        }
+
+        const gunzip = zlib.createGunzip({});
+        const tar = list();
+
+        gunzip.on('error', reject);
+        res.on('error', reject);
+        resolve(res.pipe(gunzip).pipe(tar));
+      })
+      .on('error', reject);
   });
 
 // Download handler for direct .mmdb files
